@@ -104,8 +104,8 @@ class Stats:
             "fouling_tendency": (self.misc, "Fouls/90", False)
         }
         self.overall_goalkeeping_attributes = {
-            "team_defensive_prowess": (self.keeper_advanced, "GA/90", True),
-            "penalty_saving": (self.keeper, ("Penalty Kicks", "Save%"), True),
+            "goals_against_per_90": (self.keeper_advanced, "GA/90", True),
+            "penalty_saving": (self.keeper, ("Penalty Kicks", "Save%"), False),
             "freekick_saving": (self.keeper_advanced, "FK/90", True),
             "corners_saving": (self.keeper_advanced, "CK/90", True),
             "clean_sheet_consistency": (self.keeper, ("Performance", "CS%"), False)
@@ -127,6 +127,7 @@ class Stats:
             "goalkicks_distance": (self.keeper_advanced, ("Goal Kicks", "AvgLen"), False)
         }
         self.sweeping_attributes = {
+            "crossed_stopped": (self.keeper_advanced, ("Crosses", "Stp"), False),
             "crosses_stopping_tendency": (self.keeper_advanced, ("Crosses", "Stp%"), False),
             "sweeping_actions": (self.keeper_advanced, ("Sweeper", "#OPA"), False),
             "sweeping_tendency": (self.keeper_advanced, ("Sweeper", "#OPA/90"), False)
@@ -176,6 +177,14 @@ class Stats:
             data["ranking"].append(player_entry)
         return data
 
+    def get_attribute(
+        self,
+        dataframe: pd.DataFrame,
+        index: tuple,
+        column,
+    ):
+        return dataframe.loc[index, column]
+
     def get_attribute_and_compare(
         self,
         dataframe: pd.DataFrame,
@@ -185,7 +194,14 @@ class Stats:
         ascending=False,
     ):
         filtered = dataframe.loc[index[0], :, :, :]
-        filtered = filtered[filtered[("pos", "")] == position]
+        player_position = filtered.loc[index[1:], ("pos", "")]
+        if player_position == position:
+            filtered = filtered[filtered[("pos", "")] == position]
+        elif position in player_position:
+            filtered = filtered[filtered[("pos", "")].str.contains(position)]
+        else:
+            filtered = filtered[(filtered.index == index[1:]) | (filtered['pos'] == position)]
+        filtered.to_excel("test.xlsx")
         filtered[column] = pd.to_numeric(filtered[column])
         filtered["rank"] = filtered[column].rank(
             ascending=ascending, method="min", na_option="bottom"

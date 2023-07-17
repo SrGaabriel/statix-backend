@@ -6,16 +6,15 @@ from unidecode import unidecode
 import re, base64
 import numpy as np
 
-from teamname_replacements import TEAMNAME_REPLACEMENTS
+from config import TEAMNAME_REPLACEMENTS, PLAYERNAME_REPLACEMENTS
 from stats import Stats
 from utils import get_player_id, decode_player_id
 
 fbref = sd.FBref(
-    leagues=["Big 5 European Leagues Combined", "BRA-Brasileirao"],
+    leagues=["Big 5 European Leagues Combined"],
     seasons=["22-23", "2023"],
 )
 elo = sd.ClubElo()
-
 
 playing_time = {}
 player_ids = {}
@@ -24,11 +23,20 @@ player_ids = {}
 def create_stats_dataframe(
     type: str, isStandard: bool = False, isKeeper=False
 ) -> pd.DataFrame:
-    renamed = fbref.read_player_season_stats(stat_type=type).rename(
-        index=lambda x: TEAMNAME_REPLACEMENTS.get(x, x), level="team"
+    renamed = (fbref.read_player_season_stats(stat_type=type)
+        .rename(
+            index=lambda x: TEAMNAME_REPLACEMENTS.get(x, x), level="team"
+        )
+        .rename(
+            index=lambda x: PLAYERNAME_REPLACEMENTS.get(x, x), level="player"
+        )
     )
     without_duplicates = remove_duplicates(renamed, isStandard, isKeeper)
-    return without_duplicates
+    column_name = ("Playing Time", "90s") if isStandard else "90s"
+    without_duplicates[column_name] = pd.to_numeric(without_duplicates[column_name])
+    filtered_by_caps = without_duplicates[without_duplicates[column_name] >= 4]
+    filtered_by_caps.to_excel(f"desired\\auto\\{type}.xlsx")
+    return filtered_by_caps
 
 
 playing_times = {}
@@ -147,7 +155,7 @@ create_per_90s_column(misc, "Fouls", ("Performance", "Fls"))
 keeper = create_stats_dataframe("keeper", isKeeper=True)
 
 create_per_90s_column(
-    keeper, "SoTA", ("Performance", "SoTA"), ninetiesColumn=("Playing Time", "90s")
+    keeper, "SoTA", ("Performance", "SoTA")
 )
 
 keeper_advanced = create_stats_dataframe("keeper_adv", isKeeper=True)
@@ -156,6 +164,7 @@ create_per_90s_column(keeper_advanced, "GA", ("Goals", "GA"))
 create_per_90s_column(keeper_advanced, "FK", ("Goals", "FK"))
 create_per_90s_column(keeper_advanced, "CK", ("Goals", "CK"))
 create_per_90s_column(keeper_advanced, "OG", ("Goals", "OG"))
+
 
 del playing_times
 
