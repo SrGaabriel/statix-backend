@@ -37,7 +37,7 @@ class DataframeLoader:
         renamed.to_excel(f"desired\\auto\\{type}.xlsx")
         without_duplicates = self.remove_duplicates(renamed, is_standard, is_keeper)
         without_duplicates.to_excel(f"desired\\{type}.xlsx")
-        return without_duplicates
+        return without_duplicates.sort_index()
 
     player_ids = {}
     playing_times = {}
