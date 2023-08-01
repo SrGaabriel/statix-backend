@@ -137,8 +137,7 @@ class DataframeLoader:
         key_id = (index[3].lower(), index[1], index[2])
         overwritten_name = pn.PLAYERNAME_REPLACEMENTS.get(key_id, None)
         if overwritten_name is not None:
-            new_value = (index[0], index[1], index[2], overwritten_name)
-            return new_value
+            return (index[0], index[1], index[2], unidecode(overwritten_name))
         return index
 
     def remove_plus_signal(self, dataframe: pd.DataFrame, column):

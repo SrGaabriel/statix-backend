@@ -161,12 +161,20 @@ RAW_PLAYERNAME_REPLACEMENTS = {
     "Victor Sa": ('2324', 'Botafogo', ['victor sa']),
     "Eder Ferreira": ('2324', 'América-MG', ['eder ferreira']),
     "Allyson": ('2324', 'Cuiabá', ['allyson']),
-    "Bruno Rodriguez": ('2324', 'Cruzeiro', ['bruno nascimento']),
+    "Bruno Rodrigues": ('2324', 'Cruzeiro', ['bruno nascimento']),
     "Guilherme Augusto": ('2324', 'Fortaleza', ['guilherme augusto']),
     "João Ricardo": ('2324', 'Fortaleza', ['joao ricardo']),
     "Andrey Galvão": ('2324', 'Coritiba', ['andrey']),
-    "José Luis Rodríguez Bebánz": ('2324', 'Vasco da Gama', ['jose luis rodriguez']),
+    "Puma Rodríguez": ('2324', 'Vasco da Gama', ['Jose Luis Rodriguez Bebanz']),
     "Robson Fernandes": ('2324', 'Coritiba', ['robson fernandes']),
+    "Gabriel Martinelli": ('2223', 'Arsenal', ['Martinelli']),
+    "Gabriel Magalhães": ('2223', 'Arsenal', ['Gabriel Dos Santos']),
+    "Emiliano Buendía": ('2223', 'Aston Villa', ['Emi Buendia']),
+    "Vitalii Myolenko": ('2223', 'Everton', ['Vitaliy Mykolenko']),
+    "Nacho Fernández": ('2223', 'Real Madrid', ['Nacho']),
+    "Kike Garcia": ('2223', 'Osasuna', ['Kike']),
+    "Memphis Depay": ('2223', 'Atlético Madrid', ['Memphis']),
+    "Matías Zaracho": ('2324', 'Atlético-MG', ['Federico Zaracho']),
 }
 
 PLAYERNAME_REPLACEMENTS = {}
