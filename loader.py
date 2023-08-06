@@ -63,6 +63,7 @@ class DataframeLoader:
                 )
 
                 if overwritten_position is not None:
+                    row["pos"] = overwritten_position
                     dataframe.loc[index, 'pos'] = overwritten_position
                 continue
 
@@ -121,7 +122,7 @@ class DataframeLoader:
                 overwritten_position = overrides.get(key_id, None)
                 if overwritten_position is not None:
                     row["pos"] = overwritten_position
-                    dataframe.loc[index, 'pos'] = overwritten_position
+                    filtered.loc[index, 'pos'] = overwritten_position
                 self.player_ids[
                     get_player_id(
                         index[3], row["nation"].item(), row["born"].item()

@@ -23,7 +23,7 @@ DATA_DIR = Path(BASE_DIR, "data")
 FBREF_DATA_DIR = Path(DATA_DIR, "FBref")
 POSITIONS_DATA_DIR = Path(DATA_DIR, "positions")
 
-TODAY_FBREF_DATA_DIR = Path(FBREF_DATA_DIR, formatted_date)
+TODAY_FBREF_DATA_DIR = Path(FBREF_DATA_DIR, "2023-07-31")
 TODAY_POSITIONS_DATA_DIR = Path(POSITIONS_DATA_DIR, formatted_date)
 
 player_infos = PlayerInfos(
@@ -141,6 +141,7 @@ def compile_dataframe_players(dataframe):
             "id": id,
             "name": name,
             "club": index[2],
+            "league": encode_league(index[0]),
             "club_elo": get_club_elo(index[2]),
             "nationality": row["nation"].item(),
             "position": row["pos"].item()[:2],
@@ -282,6 +283,34 @@ def get_similar_players(id):
 
     return jsonify(stats.find_similar_players(player_index, league, position))
 
+@app.route("/players/compare/<first_id>/<second_id>", methods=["GET"])
+def get_comparison_matrix(first_id, second_id):
+    first_id_row_data = loader.get_player_by_id(first_id)
+    second_id_row_data = loader.get_player_by_id(second_id)
+    if first_id_row_data is None or second_id_row_data is None:
+        abort(404)
+    indexes = [first_id_row_data[0], second_id_row_data[0]]
+    ids = [first_id, second_id]
+
+    third_id = request.args.get("third", default=None, type=str)
+    if third_id is not None:
+        third_id_row_data = loader.get_player_by_id(third_id)
+        indexes.append(third_id_row_data[0])
+        ids.append(third_id)
+        fourth_id = request.args.get("fourth", default=None, type=str)
+        if fourth_id is not None:
+            fourth_id_row_data = loader.get_player_by_id(fourth_id)
+            indexes.append(fourth_id_row_data[0])
+            ids.append(fourth_id)
+
+    position = request.args.get("position", type=str)
+    if position is None:
+        abort(400)
+    else:
+        position = get_position_abbreviation(position)
+    league = decode_league(request.args.get("league", type=str))
+
+    return jsonify(stats.create_radar_data_for_comparison(indexes, ids, league, position))
 
 @app.route("/players/<id>/<type>/<stat>", methods=["GET"])
 def get_player_statistic_ranking(id, type, stat):

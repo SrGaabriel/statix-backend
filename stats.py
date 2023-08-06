@@ -37,30 +37,30 @@ class Stats:
             "shooting_threat"
         ]
         self.forwards_radar_playmaking_data = [
-            "goal_creating_actions",
             "goal_creating_tendency",
+            "shot_creating_tendency",
             "goal_creating_passes",
             "goal_creating_dribbles",
-            "shot_creating_setpieces",
             "expected_assists"
         ]
         self.forwards_radar_possession_data = [
+            "taking_on_tendency",
             "taking_on_ability",
             "taking_on_consistency",
             "carrying_tendency",
             "carrying_progressiveness",
-            "received_progressive_passes",
             "penalty_area_carries",
             "final_third_carries"
         ]
         self.forwards_radar_passing_data = [
             "directness",
             "key_passes",
+            "through_balls",
             "final_third_passes",
             "crossing_tendency",
             "long_range_passes",
         ]
-        self.forwards_radar_defending_data = ["defensive_actions", "aerial_reliability", "aerial_prowess"]
+        self.forwards_radar_defending_data = ["defensive_actions", "aerial_reliability"]
         # ------------------------
         self.midfielders_radar_shooting_data = ["shooting_clinicality", "shooting_tendency", "shooting_threat"]
         self.midfielders_radar_playmaking_data = [
@@ -338,6 +338,29 @@ class Stats:
         else:
             return dataframe[(dataframe.index == player_index) | (dataframe.index.get_level_values('league') == league)]
 
+    def multiple_filter_dataframe(self, dataframe: pd.DataFrame, indexes: tuple, league: str, position: str) -> pd.DataFrame:
+        filtered = self.multiple_filter_by_league(dataframe, indexes, league)
+        filtered = self.multiple_filter_by_position(filtered, indexes, position)
+        return filtered
+
+    def multiple_filter_by_position(self, dataframe: pd.DataFrame, indexes: tuple, position: str) -> pd.DataFrame:
+        filtered = dataframe
+        if position != "GK":
+            if position in self.parent_positions:
+                children_positions = self.parent_positions[position]
+                filtered = dataframe[(dataframe.index.isin(indexes)) | dataframe["pos"].isin(children_positions)]
+            else:
+                filtered = dataframe[(dataframe.index.isin(indexes)) | (dataframe['pos'] == position)]
+        else:
+            filtered = dataframe[dataframe["pos"] == position]
+        return filtered
+
+    def multiple_filter_by_league(self, dataframe: pd.DataFrame, indexes: tuple, league: str) -> pd.DataFrame:
+        if league == "Top 5 European Leagues":
+            return dataframe[(dataframe.index.isin(indexes)) | dataframe.index.get_level_values('league').isin(self.top_5_european_leagues)]
+        else:
+            return dataframe[(dataframe.index.isin(indexes)) | (dataframe.index.get_level_values('league') == league)]
+
     def get_player_data(self, player_index: tuple, league: str, position: str):
         data = {}
         dataframe_cache = {}
@@ -431,6 +454,64 @@ class Stats:
             })
         return data
 
+    def create_radar_data_for_comparison(self, indexes: list, ids: list, league: str, position: str):
+        standard = self.multiple_filter_dataframe(self.standard, indexes, league, position)
+        filtered_cache = { "standard": standard }
+        data = { "players": {} }
+        for (id, player_index) in zip(ids, indexes):
+            data["players"][id] = {
+                "name": player_index[3],
+                "nation": standard.loc[player_index, "nation"],
+                "club": player_index[2],
+                "values": {}
+            }
+
+        parent_position = self.get_parent_position(position)
+        if parent_position == "FW":
+            self.assemble_radar_comparison_data(indexes, league, position, data, self.shooting_attributes, self.forwards_radar_shooting_data, filtered_cache)
+            self.assemble_radar_comparison_data(indexes, league, position, data, self.playmaking_attributes, self.forwards_radar_playmaking_data, filtered_cache)
+            self.assemble_radar_comparison_data(indexes, league, position, data, self.possession_attributes, self.forwards_radar_possession_data, filtered_cache)
+            self.assemble_radar_comparison_data(indexes, league, position, data, self.passing_attributes, self.forwards_radar_passing_data, filtered_cache)
+            self.assemble_radar_comparison_data(indexes, league, position, data, self.defending_attributes, self.forwards_radar_defending_data, filtered_cache)
+        elif parent_position == "MF":
+            self.assemble_radar_comparison_data(indexes, league, position, data, self.shooting_attributes, self.midfielders_radar_shooting_data, filtered_cache)
+            self.assemble_radar_comparison_data(indexes, league, position, data, self.playmaking_attributes, self.midfielders_radar_playmaking_data, filtered_cache)
+            self.assemble_radar_comparison_data(indexes, league, position, data, self.possession_attributes, self.midfielders_radar_possession_data, filtered_cache)
+            self.assemble_radar_comparison_data(indexes, league, position, data, self.passing_attributes, self.midfielders_radar_passing_data, filtered_cache)
+            self.assemble_radar_comparison_data(indexes, league, position, data, self.defending_attributes, self.midfielders_radar_defending_data, filtered_cache)
+        elif parent_position == "DF":
+            self.assemble_radar_comparison_data(indexes, league, position, data, self.playmaking_attributes, self.defenders_radar_playmaking_data, filtered_cache)
+            self.assemble_radar_comparison_data(indexes, league, position, data, self.possession_attributes, self.defenders_radar_possession_data, filtered_cache)
+            self.assemble_radar_comparison_data(indexes, league, position, data, self.passing_attributes, self.defenders_radar_passing_data, filtered_cache)
+            self.assemble_radar_comparison_data(indexes, league, position, data, self.defending_attributes, self.defenders_radar_defending_data, filtered_cache)
+        elif parent_position == "GK":
+            self.assemble_radar_comparison_data(indexes, league, position, data, self.overall_goalkeeping_attributes, self.overall_goalkeeping_radar_data, filtered_cache)
+            self.assemble_radar_comparison_data(indexes, league, position, data, self.shot_stopping_attributes, self.shot_stopping_radar_data, filtered_cache)
+            self.assemble_radar_comparison_data(indexes, league, position, data, self.distribution_attributes, self.distribution_radar_data, filtered_cache)
+            self.assemble_radar_comparison_data(indexes, league, position, data, self.sweeping_attributes, self.sweeping_radar_data, filtered_cache)
+        return data
+    
+    def assemble_radar_comparison_data(self, indexes: tuple, league: str, position: str, data, attribute_map, desired_attributes, filtered_cache):
+        for attribute_name in desired_attributes:
+            (dataframe, column, ascending) = attribute_map[attribute_name]
+
+            cached_value = filtered_cache.get(self.get_dataframe_name(dataframe), None)
+            if cached_value is not None:
+                filtered = cached_value
+            else:
+                filtered = self.multiple_filter_dataframe(dataframe, indexes, league, position)
+                filtered_cache[self.get_dataframe_name(dataframe)] = filtered
+
+            for index in indexes:
+                filtered = filtered.copy()
+                player_value = self.get_attribute_and_compare(filtered, index, column, ascending=ascending)
+                player_nationality = filtered.loc[index, "nation"]
+                player_born = int(filtered.loc[index, "born"])
+
+                player_id = get_player_id(index[3], player_nationality, player_born)
+                player_data = data["players"][player_id]["values"]
+
+                player_data[attribute_name] = float(player_value)
 
     def create_radar_data(self, player_index: tuple, league: str, position: str, rating_type: str):
         data = { "values": [] }
