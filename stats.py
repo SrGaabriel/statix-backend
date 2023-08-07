@@ -460,6 +460,7 @@ class Stats:
         data = { "players": {} }
         for (id, player_index) in zip(ids, indexes):
             data["players"][id] = {
+                "id": id,
                 "name": player_index[3],
                 "nation": standard.loc[player_index, "nation"],
                 "club": player_index[2],
