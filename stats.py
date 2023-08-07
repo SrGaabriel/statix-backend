@@ -590,7 +590,9 @@ class Stats:
         )
         rank = dataframe.loc[index, "rank"]
         total = dataframe.shape[0]
-        return float((total - rank + 1) / total * 100)
+        if rank == 1:
+            return 100
+        return float((total - rank) / total * 100)
 
     def get_map_by_stat_type(self, stat_type):
         if stat_type == "shooting":

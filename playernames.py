@@ -170,11 +170,12 @@ RAW_PLAYERNAME_REPLACEMENTS = {
     "Gabriel Martinelli": ('2223', 'Arsenal', ['Martinelli']),
     "Gabriel Magalhães": ('2223', 'Arsenal', ['Gabriel Dos Santos']),
     "Emiliano Buendía": ('2223', 'Aston Villa', ['Emi Buendia']),
-    "Vitalii Myolenko": ('2223', 'Everton', ['Vitaliy Mykolenko']),
+    "Vitaliy Mykolenko": ('2223', 'Everton', ['Vitalii Mykolenko']),
     "Nacho Fernández": ('2223', 'Real Madrid', ['Nacho']),
     "Kike Garcia": ('2223', 'Osasuna', ['Kike']),
     "Memphis Depay": ('2223', 'Atlético Madrid', ['Memphis']),
     "Matías Zaracho": ('2324', 'Atlético-MG', ['Federico Zaracho']),
+    "Rasmus Kristensen": ('2223', 'Leeds United', ['Rasmus Nissen'])
 }
 
 PLAYERNAME_REPLACEMENTS = {}

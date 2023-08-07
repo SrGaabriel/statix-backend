@@ -23,6 +23,7 @@ class DataframeLoader:
             leagues=["Big 5 European Leagues Combined", "BRA-Brasileirao"],
             seasons=["22-23", "2023"],
             data_dir=data_dir,
+            no_store=True
         )
 
     def create_stats_dataframe(
