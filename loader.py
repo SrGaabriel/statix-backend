@@ -16,14 +16,15 @@ class DataframeLoader:
     def __init__(
             self,
             data_dir,
-            player_infos: PlayerInfos
+            player_infos: PlayerInfos,
+            playing_time_threshold: int = 360
         ):
         self.player_infos = player_infos
+        self.playing_time_threshold = playing_time_threshold
         self.fbref = sd.FBref(
             leagues=["Big 5 European Leagues Combined", "BRA-Brasileirao"],
-            seasons=["22-23", "2023"],
-            data_dir=data_dir,
-            no_store=True
+            seasons=["23-24",],
+            data_dir=data_dir
         )
 
     def create_stats_dataframe(
@@ -32,7 +33,6 @@ class DataframeLoader:
         renamed = (
             self.fbref.read_player_season_stats(stat_type=type)
             .rename(index=lambda x: TEAMNAME_REPLACEMENTS.get(x, x), level="team")
-            #.rename(index=lambda x: PLAYERNAME_REPLACEMENTS.get(x, x), level="player")
             .rename(index=lambda x: unidecode(x), level="player")
         )
         renamed.to_excel(f"desired\\auto\\{type}.xlsx")
@@ -54,10 +54,6 @@ class DataframeLoader:
         global overrides
         players_registry = {}
         for index, row in dataframe.iterrows():
-            if index[0] == "BRA-Brasileirao" and index[1] == "2223":
-                self.drop_player(index, is_keeper)
-                continue
-
             if not is_standard:
                 overwritten_position = overrides.get(
                     (index[3].lower(), index[1], index[2]), None
@@ -85,7 +81,7 @@ class DataframeLoader:
             if playing_time is None:
                 self.drop_player(index, is_keeper)
                 continue
-            elif playing_time < 360:
+            elif playing_time < self.playing_time_threshold:
                 self.drop_player(index, is_keeper)
                 continue
 
@@ -113,7 +109,7 @@ class DataframeLoader:
                 nations.add(premier_league_player["nationality"])
 
             overrides = self.player_infos.generate_mappings(dataframe, filtered)
-            
+
             for index, row in filtered.iterrows():
                 lower_name = index[3].lower()
                 season = index[1]

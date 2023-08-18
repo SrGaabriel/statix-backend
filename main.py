@@ -23,16 +23,18 @@ DATA_DIR = Path(BASE_DIR, "data")
 FBREF_DATA_DIR = Path(DATA_DIR, "FBref")
 POSITIONS_DATA_DIR = Path(DATA_DIR, "positions")
 
-TODAY_FBREF_DATA_DIR = Path(FBREF_DATA_DIR, "2023-07-31")
+TODAY_FBREF_DATA_DIR = Path(FBREF_DATA_DIR, formatted_date)
 TODAY_POSITIONS_DATA_DIR = Path(POSITIONS_DATA_DIR, formatted_date)
 
+PLAYING_TIME_THRESHOLD = 0
+
 player_infos = PlayerInfos(
-    data_dir=TODAY_POSITIONS_DATA_DIR, cache=True, store_cache=True
+    data_dir=TODAY_POSITIONS_DATA_DIR, cache=False , store_cache=True, playing_time_threshold=PLAYING_TIME_THRESHOLD
 )
 player_infos.load_all_players()
 
 elo = sd.ClubElo()
-loader = DataframeLoader(data_dir=TODAY_FBREF_DATA_DIR, player_infos=player_infos)
+loader = DataframeLoader(data_dir=TODAY_FBREF_DATA_DIR, playing_time_threshold=PLAYING_TIME_THRESHOLD, player_infos=player_infos)
 
 standard = loader.create_stats_dataframe("standard", is_standard=True)
 shooting = loader.create_stats_dataframe("shooting")

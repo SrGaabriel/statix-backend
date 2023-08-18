@@ -37,11 +37,10 @@ class Stats:
             "shooting_threat"
         ]
         self.forwards_radar_playmaking_data = [
-            "goal_creating_tendency",
             "shot_creating_tendency",
-            "goal_creating_passes",
-            "goal_creating_dribbles",
-            "expected_assists"
+            "shot_creating_passes",
+            "shot_creating_dribbles",
+            "expected_assisted_shots"
         ]
         self.forwards_radar_possession_data = [
             "taking_on_tendency",
@@ -64,7 +63,6 @@ class Stats:
         # ------------------------
         self.midfielders_radar_shooting_data = ["shooting_clinicality", "shooting_tendency", "shooting_threat"]
         self.midfielders_radar_playmaking_data = [
-            "shot_creating_actions",
             "shot_creating_tendency",
             "shot_creating_passes",
             "shot_creating_dribbles",
@@ -316,7 +314,7 @@ class Stats:
     def filter_by_position(self, dataframe: pd.DataFrame, player_index: tuple, position: str) -> pd.DataFrame:
         filtered = dataframe
         if position != "GK":
-            player_position = dataframe.loc[player_index, "pos"]
+            player_position = dataframe.loc[player_index, "pos"].item()
             if player_position == position:
                 filtered = dataframe[dataframe["pos"] == position]
             elif position in self.parent_positions:
@@ -443,6 +441,11 @@ class Stats:
             player_born = int(filtered_dataframe.loc[player_index, "born"])
 
             player_id = get_player_id(player_name, player_nation, player_born)
+            value = filtered_dataframe.loc[player_index, column]
+            if pd.isna(value):
+                value = 0.0
+            else:
+                value = float(value)
 
             data["ranking"].append({
                 "id": player_id,
@@ -450,7 +453,7 @@ class Stats:
                 "nation": player_nation,
                 "born": player_born,
                 "rank": int(rank),
-                "value": float(filtered_dataframe.loc[player_index, column])
+                "value": value
             })
         return data
 
@@ -589,9 +592,9 @@ class Stats:
             ascending=ascending, method="max", na_option="bottom"
         )
         rank = dataframe.loc[index, "rank"]
-        total = dataframe.shape[0]
         if rank == 1:
             return 100
+        total = dataframe.shape[0]
         return float((total - rank) / total * 100)
 
     def get_map_by_stat_type(self, stat_type):

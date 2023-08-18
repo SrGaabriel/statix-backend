@@ -8,10 +8,11 @@ from playernames import PLAYERNAME_REPLACEMENTS
 
 
 class PlayerInfos:
-    def __init__(self, data_dir, cache: bool, store_cache: bool):
+    def __init__(self, data_dir, cache: bool, playing_time_threshold: int, store_cache: bool):
         self.data_dir = data_dir
         self.association_map = {}
         self.cache = cache
+        self.playing_time_threshold = playing_time_threshold
         self.store_cahe = store_cache
         self.premier_league_players = []
 
@@ -31,7 +32,7 @@ class PlayerInfos:
         data = response.json()[0]
         for player in data:
             minutes = int(player["17"])
-            if 360 > minutes:
+            if self.playing_time_threshold > minutes:
                 continue
 
             name = unidecode(player["2"].strip())
@@ -56,12 +57,12 @@ class PlayerInfos:
                 f.write(json.dumps(self.premier_league_players))
 
     def load_all_players(self):
-        self.load_players("2223", 65452)  # Premier League 2223
-        self.load_players("2223", 66116)  # La Liga 2223
-        self.load_players("2223", 66010)  # Serie A 2223
-        self.load_players("2223", 65453)  # Ligue 1 2223
-        self.load_players("2223", 65445)  # Bundesliga 2223
-        self.load_players("2324", 68014)  # Brasileirão 2023
+        self.load_players("2324", 68731)  # Premier League 2324
+        self.load_players("2324", 68733)  # La Liga 2324
+        # self.load_players("2324", 68734)  # Serie A 2324
+        self.load_players("2324", 68727)  # Ligue 1 2324
+        # self.load_players("2324", 68723)  # Bundesliga 2324
+        self.load_players("2324", 68014)  # Brasileirão 23
 
     def translate_position(self, position: str):
         if position == "Goalkeeper":
@@ -121,14 +122,16 @@ class PlayerInfos:
             name = player_index[3]
             club = player_index[2]
             season = player_index[1]
-            position = player_row["pos"].item()[:2]
+            position = player_row["pos"].item()
+            if pd.isna(position):
+                continue
             entire_dataframe_players[name.lower(), season, club] = player_row
         filtered_database_players = {}
         for player_index, player_row in filtered.iterrows():
             name = player_index[3]
             club = player_index[2]
             season = player_index[1]
-            position = player_row["pos"].item()[:2]
+            position = player_row["pos"].item()
             filtered_database_players[name.lower(), season, club] = player_row
 
         overwritten_positions = {}
