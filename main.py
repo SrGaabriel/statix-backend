@@ -1,5 +1,4 @@
 import soccerdata as sd
-import pandas as pd
 from flask import Flask, jsonify, request, abort
 from flask_cors import CORS
 from flask_caching import Cache
@@ -26,10 +25,10 @@ POSITIONS_DATA_DIR = Path(DATA_DIR, "positions")
 TODAY_FBREF_DATA_DIR = Path(FBREF_DATA_DIR, formatted_date)
 TODAY_POSITIONS_DATA_DIR = Path(POSITIONS_DATA_DIR, formatted_date)
 
-PLAYING_TIME_THRESHOLD = 0
+PLAYING_TIME_THRESHOLD = 90
 
 player_infos = PlayerInfos(
-    data_dir=TODAY_POSITIONS_DATA_DIR, cache=False , store_cache=True, playing_time_threshold=PLAYING_TIME_THRESHOLD
+    data_dir=TODAY_POSITIONS_DATA_DIR, cache=True, store_cache=True, playing_time_threshold=PLAYING_TIME_THRESHOLD
 )
 player_infos.load_all_players()
 
@@ -72,6 +71,7 @@ loader.create_per_90s_column(
     possession, "Carries Progressiveness", ("Carries", "PrgDist")
 )
 
+playing_time = loader.create_stats_dataframe("playing_time")
 misc = loader.create_stats_dataframe("misc")
 
 loader.create_per_90s_column(misc, "Aerial Duels Won", ("Aerial Duels", "Won"))
@@ -103,10 +103,12 @@ stats = Stats(
     goal_shot_creation,
     defense,
     possession,
+    playing_time,
     misc,
     keeper,
     keeper_advanced,
 )
+stats.load_relative_columns()
 
 clubs_elo = {}
 

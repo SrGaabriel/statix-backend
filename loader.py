@@ -1,6 +1,4 @@
 import os
-from pathlib import Path
-from datetime import date
 import pandas as pd
 import soccerdata as sd
 import numpy as np
@@ -14,17 +12,16 @@ from utils import get_player_id
 
 class DataframeLoader:
     def __init__(
-            self,
-            data_dir,
-            player_infos: PlayerInfos,
-            playing_time_threshold: int = 360
-        ):
+        self, data_dir, player_infos: PlayerInfos, playing_time_threshold: int = 360
+    ):
         self.player_infos = player_infos
         self.playing_time_threshold = playing_time_threshold
         self.fbref = sd.FBref(
             leagues=["Big 5 European Leagues Combined", "BRA-Brasileirao"],
-            seasons=["23-24",],
-            data_dir=data_dir
+            seasons=[
+                "23-24",
+            ],
+            data_dir=data_dir,
         )
 
     def create_stats_dataframe(
@@ -50,7 +47,9 @@ class DataframeLoader:
         if is_keeper:
             self.duplicated_goalkeeper_indexes.append(index)
 
-    def remove_duplicates(self, dataframe: pd.DataFrame, is_standard=False, is_keeper=False):
+    def remove_duplicates(
+        self, dataframe: pd.DataFrame, is_standard=False, is_keeper=False
+    ):
         global overrides
         players_registry = {}
         for index, row in dataframe.iterrows():
@@ -61,7 +60,7 @@ class DataframeLoader:
 
                 if overwritten_position is not None:
                     row["pos"] = overwritten_position
-                    dataframe.loc[index, 'pos'] = overwritten_position
+                    dataframe.loc[index, "pos"] = overwritten_position
                 continue
 
             name = index[3]
@@ -105,7 +104,7 @@ class DataframeLoader:
         self.__rename_indexes__(filtered)
         if is_standard:
             nations = set()
-            for premier_league_player in self.player_infos.premier_league_players:
+            for premier_league_player in self.player_infos.player_infos:
                 nations.add(premier_league_player["nationality"])
 
             overrides = self.player_infos.generate_mappings(dataframe, filtered)
@@ -119,18 +118,16 @@ class DataframeLoader:
                 overwritten_position = overrides.get(key_id, None)
                 if overwritten_position is not None:
                     row["pos"] = overwritten_position
-                    filtered.loc[index, 'pos'] = overwritten_position
+                    filtered.loc[index, "pos"] = overwritten_position
                 self.player_ids[
-                    get_player_id(
-                        index[3], row["nation"].item(), row["born"].item()
-                    )
+                    get_player_id(index[3], row["nation"].item(), row["born"].item())
                 ] = (index, row)
 
         return filtered
-    
+
     def __rename_indexes__(self, dataframe: pd.DataFrame):
         dataframe.index = dataframe.index.map(lambda x: self.__rename_index__(x))
-    
+
     def __rename_index__(self, index: tuple):
         key_id = (index[3].lower(), index[1], index[2])
         overwritten_name = pn.PLAYERNAME_REPLACEMENTS.get(key_id, None)
@@ -141,14 +138,22 @@ class DataframeLoader:
     def remove_plus_signal(self, dataframe: pd.DataFrame, column):
         pass
 
-    def create_grouped_column(self, dataframe: pd.DataFrame, group: str, column, new_column_name: str):
+    def create_grouped_column(
+        self, dataframe: pd.DataFrame, group: str, column, new_column_name: str
+    ):
         dataframe[column] = dataframe[column].fillna(0)
         dataframe[column] = pd.to_numeric(dataframe[column])
 
         if isinstance(column, tuple):
-            dataframe[new_column_name] = dataframe[[column]] / dataframe.groupby(level=group)[[column]].sum() * 100
+            dataframe[new_column_name] = (
+                dataframe[[column]]
+                / dataframe.groupby(level=group)[[column]].sum()
+                * 100
+            )
         elif isinstance(column, str):
-            dataframe[new_column_name] = dataframe[column] / dataframe.groupby(level=group)[column].sum() * 100
+            dataframe[new_column_name] = (
+                dataframe[column] / dataframe.groupby(level=group)[column].sum() * 100
+            )
         else:
             raise TypeError("Column must be a tuple or a string")
 

@@ -8,13 +8,15 @@ from playernames import PLAYERNAME_REPLACEMENTS
 
 
 class PlayerInfos:
-    def __init__(self, data_dir, cache: bool, playing_time_threshold: int, store_cache: bool):
+    def __init__(
+        self, data_dir, cache: bool, playing_time_threshold: int, store_cache: bool
+    ):
         self.data_dir = data_dir
         self.association_map = {}
         self.cache = cache
         self.playing_time_threshold = playing_time_threshold
         self.store_cahe = store_cache
-        self.premier_league_players = []
+        self.player_infos = []
 
     def load_players(self, season: str, league_id: int):
         cached_file = f"{self.data_dir}/{league_id}-{season}.json"
@@ -23,7 +25,7 @@ class PlayerInfos:
         if self.cache:
             if os.path.exists(cached_file):
                 with open(cached_file, "r") as f:
-                    self.premier_league_players = json.loads(f.read())
+                    self.player_infos = json.loads(f.read())
                 return
 
         response = requests.get(
@@ -41,27 +43,27 @@ class PlayerInfos:
                 PLAYERNAME_REPLACEMENTS.get((name.lower(), season, club), name)
             ).lower()
 
-            self.premier_league_players.append(
+            self.player_infos.append(
                 {
                     "name": translated_name,
                     "club": self.translate_club(player["5"]),
                     "position": player["86"],
                     "season": season,
                     "base_id": int(player["14"]),
-                    "has_image": not 'no_player' in player["4"],
-                    "nationality": player["3"]
+                    "has_image": not "no_player" in player["4"],
+                    "nationality": player["3"],
                 }
             )
         if self.store_cahe:
             with open(cached_file, "w") as f:
-                f.write(json.dumps(self.premier_league_players))
+                f.write(json.dumps(self.player_infos))
 
     def load_all_players(self):
         self.load_players("2324", 68731)  # Premier League 2324
         self.load_players("2324", 68733)  # La Liga 2324
-        # self.load_players("2324", 68734)  # Serie A 2324
+        self.load_players("2324", 68734)  # Serie A 2324
         self.load_players("2324", 68727)  # Ligue 1 2324
-        # self.load_players("2324", 68723)  # Bundesliga 2324
+        self.load_players("2324", 68723)  # Bundesliga 2324
         self.load_players("2324", 68014)  # Brasileirão 23
 
     def translate_position(self, position: str):
@@ -111,6 +113,7 @@ class PlayerInfos:
         "Atletico Madrid": "Atlético Madrid",
         "Celta": "Celta Vigo",
         "Athletic": "Athletic Club",
+        "Sheffield Utd": "Sheffield United",
     }
 
     def translate_club(self, club: str):
@@ -137,11 +140,11 @@ class PlayerInfos:
         overwritten_positions = {}
         unknown = 0
         discarded = 0
-        for pl_player in self.premier_league_players:
-            name = pl_player["name"]
-            club = pl_player["club"]
-            position = pl_player["position"]
-            season = pl_player["season"]
+        for player_info in self.player_infos:
+            name = player_info["name"]
+            club = player_info["club"]
+            position = player_info["position"]
+            season = player_info["season"]
             id = name, season, club
 
             equivalent_dataframe_player_row = filtered_database_players.get(id, None)
@@ -165,11 +168,9 @@ class PlayerInfos:
             nationality = equivalent_dataframe_player_row["nation"].item()
             birthyear = int(equivalent_dataframe_player_row["born"].item())
             player_id = get_player_id(name, nation=nationality, born=birthyear)
-            self.association_map[player_id] = pl_player
+            self.association_map[player_id] = player_info
 
-        print(
-            f"Overwritten the position of {len(overwritten_positions)} players."
-        )
+        print(f"Overwritten the position of {len(overwritten_positions)} players.")
         print(
             f"Loaded {len(self.association_map)} players, lost {unknown} players and discarded {discarded} players."
         )
@@ -181,8 +182,5 @@ class PlayerInfos:
     def get_player_info_or_empty(self, player_id: str):
         info = self.association_map.get(player_id, None)
         if info is None:
-            return {
-                "base_id": 4194304,
-                "has_image": False
-            }
+            return {"base_id": 4194304, "has_image": False}
         return info

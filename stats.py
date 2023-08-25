@@ -16,6 +16,7 @@ class Stats:
         goal_shot_creation: pd.DataFrame,
         defense: pd.DataFrame,
         possession: pd.DataFrame,
+        playing_time: pd.DataFrame,
         misc: pd.DataFrame,
         keeper: pd.DataFrame,
         keeper_advanced: pd.DataFrame,
@@ -27,6 +28,7 @@ class Stats:
         self.goal_shot_creation = goal_shot_creation
         self.defense = defense
         self.possession = possession
+        self.playing_time = playing_time
         self.misc = misc
         self.keeper = keeper
         self.keeper_advanced = keeper_advanced
@@ -77,14 +79,17 @@ class Stats:
             "final_third_carries",
             "penalty_area_carries",
             "defensive_third_touches",
+            "mid_third_touches",
             "attacking_third_touches",
         ]
         self.midfielders_radar_passing_data = [
             "directness",
             "key_passes",
+            "through_balls",
             "progressive_passes",
             "final_third_passes",
             "long_range_passes",
+            "long_range_pass_accuracy"
         ]
         self.midfielders_radar_defending_data = [
             "challenging_tendency",
@@ -169,124 +174,159 @@ class Stats:
         ]
         # ------------------------
         self.shooting_attributes = {
-            "shooting_tendency": (self.shooting, ("Standard", "Sh/90"), False),
-            "shooting_threat": (self.shooting, ("Standard", "G/Sh"), False),
-            "shooting_chances": (self.shooting, ("Expected", "npxG/Sh"), False),
-            "shooting_consistency": (self.shooting, ("Standard", "SoT%"), False),
-            "shooting_clinicality": (self.shooting, ("Expected", "np:G-xG"), False),
-            "shooting_distance": (self.shooting, ("Standard", "Dist"), False)
+            "shooting_tendency": (self.shooting, ("Standard", "Sh/90"), False, True),
+            "shooting_threat": (self.shooting, ("Standard", "G/Sh"), False, True),
+            "shooting_chances": (self.shooting, ("Expected", "npxG/Sh"), False, True),
+            "shooting_consistency": (self.shooting, ("Standard", "SoT%"), False, True),
+            "shooting_clinicality": (self.shooting, ("Expected", "np:G-xG"), False, True),
+            "shooting_distance": (self.shooting, ("Standard", "Dist"), False, False)
         }
         self.playmaking_attributes = {
-            "shot_creating_actions": (self.goal_shot_creation, ("SCA", "SCA"), False),
-            "shot_creating_tendency": (self.goal_shot_creation, ("SCA", "SCA90"), False),
-            "shot_creating_passes": (self.goal_shot_creation, ("SCA Types", "PassLive"), False),
-            "shot_creating_setpieces": (self.goal_shot_creation, ("SCA Types", "PassDead"), False),
-            "shot_creating_dribbles": (self.goal_shot_creation, ("SCA Types", "TO"), False),
-            "shot_creating_defensive_actions": (self.goal_shot_creation, ("SCA Types", "Def"), False),
-            "goal_creating_actions": (self.goal_shot_creation, ("GCA", "GCA"), False),
-            "goal_creating_tendency": (self.goal_shot_creation, ("GCA", "GCA90"), False),
-            "goal_creating_passes": (self.goal_shot_creation, ("GCA Types", "PassLive"), False),
-            "goal_creating_setpieces": (self.goal_shot_creation, ("GCA Types", "PassDead"), False),
-            "goal_creating_dribbles": (self.goal_shot_creation, ("GCA Types", "TO"), False),
-            "goal_creating_defensive_actions": (self.goal_shot_creation, ("GCA Types", "Def"), False),
-            "expected_assists": (self.passing, "xAG", False),
-            "expected_assisted_shots": (self.passing, "xA", False),
-            "forwards_clinicality": (self.passing, "A-xAG", False)
+            "shot_creating_actions": (self.goal_shot_creation, ("SCA", "SCA"), False, False),
+            "shot_creating_tendency": (self.goal_shot_creation, ("SCA", "SCA90"), False, True),
+            "shot_creating_passes": (self.goal_shot_creation, ("SCA Types", "PassLive"), False, False),
+            "shot_creating_setpieces": (self.goal_shot_creation, ("SCA Types", "PassDead"), False, False),
+            "shot_creating_dribbles": (self.goal_shot_creation, ("SCA Types", "TO"), False, False),
+            "shot_creating_defensive_actions": (self.goal_shot_creation, ("SCA Types", "Def"), False, False),
+            "goal_creating_actions": (self.goal_shot_creation, ("GCA", "GCA"), False, False),
+            "goal_creating_tendency": (self.goal_shot_creation, ("GCA", "GCA90"), False, True),
+            "goal_creating_passes": (self.goal_shot_creation, ("GCA Types", "PassLive"), False, False),
+            "goal_creating_setpieces": (self.goal_shot_creation, ("GCA Types", "PassDead"), False, False),
+            "goal_creating_dribbles": (self.goal_shot_creation, ("GCA Types", "TO"), False, False),
+            "goal_creating_defensive_actions": (self.goal_shot_creation, ("GCA Types", "Def"), False, False),
+            "expected_assists": (self.passing, "xAG", False, False),
+            "expected_assisted_shots": (self.passing, "xA", False, False),
+            "forwards_clinicality": (self.passing, "A-xAG", False, True)
         }
         self.possession_attributes = {
-            "taking_on_tendency": (self.possession, "Take-ons/90", False),
-            "taking_on_ability": (self.possession, "Successful Take-Ons/90", False),
-            "taking_on_consistency": (self.possession, ("Take-Ons", "Succ%"), False),
-            "carrying_tendency": (self.possession, "Carries/90", False),
-            "progressive_carries": (self.possession, ("Carries", "PrgC"), False),
-            "carrying_progressiveness": (self.possession, "Carries Progressiveness/90", False),
-            "final_third_carries": (self.possession, ("Carries", "1/3"), False),
-            "penalty_area_carries": (self.possession, ("Carries", "CPA"), False),
-            "carrying_total_distance": (self.possession, ("Carries", "TotDist"), False),
-            "touches_per_90": (self.possession, "Touches/90", False),
-            "received_passes": (self.possession, ("Receiving", "Rec"), False),
-            "received_progressive_passes": (self.possession, ("Receiving", "PrgR"), False),
-            "possession_trustworthiness": (self.possession, ("Carries", "Dis"), True),
-            "defensive_third_touches": (self.possession, ("Touches", "Def 3rd"), False),
-            "mid_third_touches": (self.possession, ("Touches", "Mid 3rd"), False),
-            "attacking_third_touches": (self.possession, ("Touches", "Att 3rd"), False)
+            "taking_on_tendency": (self.possession, "Take-ons/90", False, True),
+            "taking_on_ability": (self.possession, "Successful Take-Ons/90", False, True),
+            "taking_on_consistency": (self.possession, ("Take-Ons", "Succ%"), False, True),
+            "carrying_tendency": (self.possession, "Carries/90", False, True),
+            "progressive_carries": (self.possession, ("Carries", "PrgC"), False, False),
+            "carrying_progressiveness": (self.possession, "Carries Progressiveness/90", False, True),
+            "final_third_carries": (self.possession, ("Carries", "1/3"), False, False),
+            "penalty_area_carries": (self.possession, ("Carries", "CPA"), False, False),
+            "carrying_total_distance": (self.possession, ("Carries", "TotDist"), False, True),
+            "touches_per_90": (self.possession, "Touches/90", False, False),
+            "received_passes": (self.possession, ("Receiving", "Rec"), False, False),
+            "received_progressive_passes": (self.possession, ("Receiving", "PrgR"), False, False),
+            "possession_trustworthiness": (self.possession, ("Carries", "Dis"), True, False),
+            "defensive_third_touches": (self.possession, ("Touches", "Def 3rd"), False, False),
+            "mid_third_touches": (self.possession, ("Touches", "Mid 3rd"), False, False),
+            "attacking_third_touches": (self.possession, ("Touches", "Att 3rd"), False, False)
         }
         self.passing_attributes = {
-            "directness": (self.passing, "Pass Directness %", False),
-            "passes_per_90": (self.passing, "Passes Completed/90", False),
-            "accuracy": (self.passing, ("Total", "Cmp%"), False),
-            "key_passes": (self.passing, "KP", False),
-            "progressive_passes": (self.passing, "PrgP", False),
-            "final_third_passes": (self.passing, "1/3", False),
-            "through_balls": (self.passing_types, ("Pass Types", "TB"), False),
-            "switching_tendency": (self.passing_types, "Sw/90", False),
-            "crossing_tendency": (self.passing_types, "Crosses/90", False),
-            "short_range_passes": (self.passing, ("Short", "Cmp"), False),
-            "short_range_pass_accuracy": (self.passing, ("Short", "Cmp%"), False),
-            "medium_range_passes": (self.passing, ("Medium", "Cmp"), False),
-            "medium_range_pass_accuracy": (self.passing, ("Medium", "Cmp%"), False),
-            "long_range_passes": (self.passing, ("Long", "Cmp"), False),
-            "long_range_pass_accuracy": (self.passing, ("Long", "Cmp%"), False),
+            "directness": (self.passing, "Pass Directness %", False, True),
+            "passes_per_90": (self.passing, "Passes Completed/90", False, True),
+            "accuracy": (self.passing, ("Total", "Cmp%"), False, True),
+            "key_passes": (self.passing, "KP", False, False),
+            "progressive_passes": (self.passing, "PrgP", False, False),
+            "final_third_passes": (self.passing, "1/3", False, False),
+            "through_balls": (self.passing_types, ("Pass Types", "TB"), False, False),
+            "switching_tendency": (self.passing_types, "Sw/90", False, True),
+            "crossing_tendency": (self.passing_types, "Crosses/90", False, True),
+            "short_range_passes": (self.passing, ("Short", "Cmp"), False, False),
+            "short_range_pass_accuracy": (self.passing, ("Short", "Cmp%"), False, True),
+            "medium_range_passes": (self.passing, ("Medium", "Cmp"), False, False),
+            "medium_range_pass_accuracy": (self.passing, ("Medium", "Cmp%"), False, True),
+            "long_range_passes": (self.passing, ("Long", "Cmp"), False, False),
+            "long_range_pass_accuracy": (self.passing, ("Long", "Cmp%"), False, True),
         }
         self.defending_attributes = {
-            "challenging_tendency": (self.defense, "Challenges/90", False),
-            "challenging_consistency": (self.defense, ("Challenges", "Tkl%"), False),
-            "defensive_actions": (self.defense, "Tkl+Int", False),
-            "defensive_third_tackles": (self.defense, ("Tackles", "Def 3rd"), False),
-            "mid_third_tackles": (self.defense, ("Tackles", "Mid 3rd"), False),
-            "attacking_third_tackles": (self.defense, ("Tackles", "Att 3rd"), False),
-            "teams_tackling_contribution": (self.defense, 'Team Tackles', False),
-            "teams_defensive_contribution": (self.defense, 'Team Tackles', False),
-            "recoveries": (self.misc, ("Performance", "Recov"), False),
-            "aerial_reliability": (self.misc, "Aerial Duels Won/90", False),
-            "aerial_prowess": (self.misc, ("Aerial Duels", "Won%"), False),
-            "clearances": (self.defense, "Clr", False),
-            "shots_blocked": (self.defense, ("Blocks", "Sh"), False),
-            "passes_blocked": (self.defense, ("Blocks", "Pass"), False),
-            "interceptions": (self.defense, "Int", False),
-            "yellow_cards": (self.misc, ("Performance", "CrdY"), False),
-            "fouling_tendency": (self.misc, "Fouls/90", False)
+            "challenging_tendency": (self.defense, "Challenges/90", False, True),
+            "challenging_consistency": (self.defense, ("Challenges", "Tkl%"), False, True),
+            "defensive_actions": (self.defense, "Tkl+Int", False, False),
+            "defensive_third_tackles": (self.defense, ("Tackles", "Def 3rd"), False, False),
+            "mid_third_tackles": (self.defense, ("Tackles", "Mid 3rd"), False, False),
+            "attacking_third_tackles": (self.defense, ("Tackles", "Att 3rd"), False, False),
+            "teams_tackling_contribution": (self.defense, 'Team Tackles', False, False),
+            "teams_defensive_contribution": (self.defense, 'Team Def Actions', False, False),
+            "recoveries": (self.misc, ("Performance", "Recov"), False, False),
+            "aerial_reliability": (self.misc, "Aerial Duels Won/90", False, True),
+            "aerial_prowess": (self.misc, ("Aerial Duels", "Won%"), False, True),
+            "clearances": (self.defense, "Clr", False, False),
+            "shots_blocked": (self.defense, ("Blocks", "Sh"), False, False),
+            "passes_blocked": (self.defense, ("Blocks", "Pass"), False, False),
+            "interceptions": (self.defense, "Int", False, False),
+            "yellow_cards": (self.misc, ("Performance", "CrdY"), False, False),
+            "fouling_tendency": (self.misc, "Fouls/90", False, True)
+        }
+        self.superstitious_attributes = {
+            "points_per_appearance": (self.playing_time, ("Team Success", "PPM"), False, True),
+            "goals_on_pitch": (self.playing_time, ("Team Success", "onG"), False, False),
+            "goals_against_on_pitch": (self.playing_time, ("Team Success", "onGA"), True, False),
+            "goal_difference_on_pitch": (self.playing_time, ("Team Success", "+/-90"), False, True),
+            "net_goals_on_pitch": (self.playing_time, ("Team Success", "On-Off"), False, False),
+            "expected_goals_on_pitch": (self.playing_time, ("Team Success (xG)", "onxG"), False, False),
+            "expected_goals_against_on_pitch": (self.playing_time, ("Team Success (xG)", "onxGA"), False, False),
+            "expected_goal_difference_on_pitch": (self.playing_time, ("Team Success (xG)", "xG+/-90"), False, True),
+            "expected_net_goals_on_pitch": (self.playing_time, ("Team Success (xG)", "On-Off"), False, True),
         }
         self.overall_goalkeeping_attributes = {
-            "goals_against_per_90": (self.keeper_advanced, "GA/90", True),
-            "penalty_saving": (self.keeper, ("Penalty Kicks", "Save%"), False),
-            "freekick_saving": (self.keeper_advanced, "FK/90", True),
-            "corners_saving": (self.keeper_advanced, "CK/90", True),
-            "clean_sheet_consistency": (self.keeper, ("Performance", "CS%"), False)
+            "goals_against_per_90": (self.keeper_advanced, "GA/90", True, True),
+            "penalty_saving": (self.keeper, ("Penalty Kicks", "Save%"), False, True),
+            "freekick_saving": (self.keeper_advanced, "FK/90", True, True),
+            "corners_saving": (self.keeper_advanced, "CK/90", True, True),
+            "clean_sheet_consistency": (self.keeper, ("Performance", "CS%"), False, True),
         }
         self.shot_stopping_attributes = {
-            "shot_stopping_total": (self.keeper_advanced, ("Expected", "PSxG+/-"), False),
-            "shot_stopping_per_90": (self.keeper_advanced, ("Expected", "/90"), False),
-            "shot_quality_faced": (self.keeper_advanced, ("Expected", "PSxG/SoT"), False),
-            "shots_against": (self.keeper, ("Performance", "SoTA"), False),
-            "shots_against_per_90": (self.keeper, "SoTA/90", False),
+            "shot_stopping_total": (self.keeper_advanced, ("Expected", "PSxG+/-"), False, True),
+            "shot_stopping_per_90": (self.keeper_advanced, ("Expected", "/90"), False, True),
+            "shot_quality_faced": (self.keeper_advanced, ("Expected", "PSxG/SoT"), False, True),
+            "shots_against": (self.keeper, ("Performance", "SoTA"), False, False),
+            "shots_against_per_90": (self.keeper, "SoTA/90", False, True),
         }
         self.distribution_attributes = {
-            "total_passes": (self.keeper_advanced, ("Passes", "Att"), False),
-            "passing_distance": (self.keeper_advanced, ("Passes", "AvgLen"), False),
-            "short_range_passes": (self.passing, ("Short", "Cmp"), False),
-            "short_range_pass_accuracy": (self.passing, ("Short", "Cmp%"), False),
-            "medium_range_passes": (self.passing, ("Medium", "Cmp"), False),
-            "medium_range_pass_accuracy": (self.passing, ("Medium", "Cmp%"), False),
-            "long_range_passes": (self.passing, ("Long", "Cmp"), False),
-            "long_range_pass_accuracy": (self.passing, ("Long", "Cmp%"), False),
-            "expected_assists": (self.passing, "xA", False),
-            "launching_consistency": (self.keeper_advanced, ("Launched", "Cmp%"), False),
-            "launching_tendency": (self.keeper_advanced, ("Passes", "Launch%"), False),
-            "goalkicks_launching_tendency": (self.keeper_advanced, ("Goal Kicks", "Launch%"), False),
-            "goalkicks_distance": (self.keeper_advanced, ("Goal Kicks", "AvgLen"), False)
+            "total_passes": (self.keeper_advanced, ("Passes", "Att"), False, False),
+            "passing_distance": (self.keeper_advanced, ("Passes", "AvgLen"), False, False),
+            "short_range_passes": (self.passing, ("Short", "Cmp"), False, False),
+            "short_range_pass_accuracy": (self.passing, ("Short", "Cmp%"), False, True),
+            "medium_range_passes": (self.passing, ("Medium", "Cmp"), False, False),
+            "medium_range_pass_accuracy": (self.passing, ("Medium", "Cmp%"), False, True),
+            "long_range_passes": (self.passing, ("Long", "Cmp"), False, False),
+            "long_range_pass_accuracy": (self.passing, ("Long", "Cmp%"), False, True),
+            "expected_assists": (self.passing, "xA", False, False),
+            "launching_consistency": (self.keeper_advanced, ("Launched", "Cmp%"), False, True),
+            "launching_tendency": (self.keeper_advanced, ("Passes", "Launch%"), False, True),
+            "goalkicks_launching_tendency": (self.keeper_advanced, ("Goal Kicks", "Launch%"), False, True),
+            "goalkicks_distance": (self.keeper_advanced, ("Goal Kicks", "AvgLen"), False, True)
         }
         self.sweeping_attributes = {
-            "crosses_stopped": (self.keeper_advanced, ("Crosses", "Stp"), False),
-            "crosses_stopping_tendency": (self.keeper_advanced, ("Crosses", "Stp%"), False),
-            "sweeping_actions": (self.keeper_advanced, ("Sweeper", "#OPA"), False),
-            "sweeping_tendency": (self.keeper_advanced, ("Sweeper", "#OPA/90"), False),
-            "sweeping_distance": (self.keeper_advanced, ("Sweeper", "AvgDist"), False),
-            "carrying_total_distance": (self.possession, ("Carries", "TotDist"), False),
-            "carrying_tendency": (self.possession, "Carries/90", False),
-            "defensive_third_touches": (self.possession, ("Touches", "Def 3rd"), False),
-            "mid_third_touches": (self.possession, ("Touches", "Mid 3rd"), False),
+            "crosses_stopped": (self.keeper_advanced, ("Crosses", "Stp"), False, False),
+            "crosses_stopping_tendency": (self.keeper_advanced, ("Crosses", "Stp%"), False, True),
+            "sweeping_actions": (self.keeper_advanced, ("Sweeper", "#OPA"), False, False),
+            "sweeping_tendency": (self.keeper_advanced, ("Sweeper", "#OPA/90"), False, True),
+            "sweeping_distance": (self.keeper_advanced, ("Sweeper", "AvgDist"), False, True),
+            "carrying_total_distance": (self.possession, ("Carries", "TotDist"), False, True),
+            "carrying_tendency": (self.possession, "Carries/90", False, True),
+            "defensive_third_touches": (self.possession, ("Touches", "Def 3rd"), False, False),
+            "mid_third_touches": (self.possession, ("Touches", "Mid 3rd"), False, False),
         }
+
+    def load_relative_columns(self):
+        self.load_attribute_relative_columns(self.shooting_attributes)
+        self.load_attribute_relative_columns(self.playmaking_attributes)
+        self.load_attribute_relative_columns(self.possession_attributes)
+        self.load_attribute_relative_columns(self.passing_attributes)
+        self.load_attribute_relative_columns(self.defending_attributes)
+        self.load_attribute_relative_columns(self.superstitious_attributes)
+        self.load_attribute_relative_columns(self.overall_goalkeeping_attributes)
+        self.load_attribute_relative_columns(self.shot_stopping_attributes)
+        self.load_attribute_relative_columns(self.distribution_attributes)
+        self.load_attribute_relative_columns(self.sweeping_attributes)
+
+    def load_attribute_relative_columns(self, attributes: dict):
+        for attribute, (dataframe, column, ascending, relative) in attributes.items():
+            dataframe_name = self.get_dataframe_name(dataframe)
+            nineties_column = "90s"
+            if dataframe_name == "standard":
+                nineties_column = ('Performance', '90s')
+            if dataframe_name == "playing_time" or dataframe_name == "keeper":
+                nineties_column = ('Playing Time', '90s')
+            if not relative:
+                dataframe[nineties_column] = pd.to_numeric(dataframe[nineties_column])
+                dataframe[attribute+"_90"] = dataframe[column] / dataframe[nineties_column]
 
     filtered_dataframe_cache = {}
     def filter_dataframe(self, dataframe: pd.DataFrame, player_index: tuple, league: str, position: str) -> pd.DataFrame:
@@ -314,7 +354,9 @@ class Stats:
     def filter_by_position(self, dataframe: pd.DataFrame, player_index: tuple, position: str) -> pd.DataFrame:
         filtered = dataframe
         if position != "GK":
-            player_position = dataframe.loc[player_index, "pos"].item()
+            player_position = dataframe.loc[player_index, "pos"]
+            if isinstance(player_position, pd.Series):
+                player_position = player_position.item()
             if player_position == position:
                 filtered = dataframe[dataframe["pos"] == position]
             elif position in self.parent_positions:
@@ -367,11 +409,13 @@ class Stats:
             data["shot-stopping"] = self.compile_data(self.shot_stopping_attributes, player_index, league, position, dataframe_cache)
             data["distribution"] = self.compile_data(self.distribution_attributes, player_index, league, position, dataframe_cache)
             data["sweeping"] = self.compile_data(self.sweeping_attributes, player_index, league, position, dataframe_cache)
+            data["superstitions"] = self.compile_data(self.superstitious_attributes, player_index, league, position, dataframe_cache)
         else:
             data["shooting"] = self.compile_data(self.shooting_attributes, player_index, league, position, dataframe_cache)
             data["playmaking"] = self.compile_data(self.playmaking_attributes, player_index, league, position, dataframe_cache)
             data["possession"] = self.compile_data(self.possession_attributes, player_index, league, position, dataframe_cache)
             data["passing"] = self.compile_data(self.passing_attributes, player_index, league, position, dataframe_cache)
+            data["superstitions"] = self.compile_data(self.superstitious_attributes, player_index, league, position, dataframe_cache)
             data["defending"] = self.compile_data(self.defending_attributes, player_index, league, position, dataframe_cache)
         return data
 
@@ -379,12 +423,18 @@ class Stats:
         data = {}
         if league == player_index[0]:
             player_index = player_index[1:]
-        for attribute, (dataframe, column, ascending) in data_map.items():
+        for attribute, (dataframe, column, ascending, relative) in data_map.items():
             filtered = dataframe_cache.get(self.get_dataframe_name(dataframe), None)
             if filtered is None:
                 filtered = self.filter_dataframe(dataframe, player_index, league, position)
                 dataframe_cache[self.get_dataframe_name(dataframe)] = filtered
-            data[attribute] = self.get_attribute_and_compare(filtered, player_index, column, ascending=ascending)
+            
+            value = filtered.loc[player_index, column]
+            value = float(0.0 if pd.isna(value) else value)
+            data[attribute] = {
+                "value": value,
+                "percentage": self.get_attribute_and_compare(filtered, player_index, column, ascending),
+            }
         return data
 
     top_5_european_leagues = ["ESP-La Liga", "ENG-Premier League", "ITA-Serie A", "GER-Bundesliga", "FRA-Ligue 1"]
@@ -433,7 +483,7 @@ class Stats:
             filtered_dataframe = filtered.copy()
             filtered_dataframe[column] = pd.to_numeric(filtered_dataframe[column])
             filtered_dataframe["rank"] = filtered_dataframe[column].rank(
-                ascending=ascending, method="min", na_option="bottom"
+                ascending=ascending, method="max", na_option="bottom"
             )
             rank = filtered_dataframe.loc[player_index, "rank"]
             player_name = player_index[-1]
@@ -497,7 +547,7 @@ class Stats:
     
     def assemble_radar_comparison_data(self, indexes: tuple, league: str, position: str, data, attribute_map, desired_attributes, filtered_cache):
         for attribute_name in desired_attributes:
-            (dataframe, column, ascending) = attribute_map[attribute_name]
+            (dataframe, column, ascending, relative) = attribute_map[attribute_name]
 
             cached_value = filtered_cache.get(self.get_dataframe_name(dataframe), None)
             if cached_value is not None:
@@ -508,7 +558,7 @@ class Stats:
 
             for index in indexes:
                 filtered = filtered.copy()
-                player_value = self.get_attribute_and_compare(filtered, index, column, ascending=ascending)
+                player_value = self.get_profile_attribute_and_compare(filtered, index, column, attribute_name, ascending=ascending, relative=relative)
                 player_nationality = filtered.loc[index, "nation"]
                 player_born = int(filtered.loc[index, "born"])
 
@@ -549,7 +599,7 @@ class Stats:
         if player_index[0] == league:
             player_index = player_index[1:]
         for attribute_name in desired_attributes:
-            (dataframe, column, ascending) = attribute_map[attribute_name]
+            (dataframe, column, ascending, relative) = attribute_map[attribute_name]
             player_value = 0
 
             cached_value = filtered_cache.get(self.get_dataframe_name(dataframe), None)
@@ -561,7 +611,7 @@ class Stats:
 
             if rating_type != "absolute":
                 filtered = filtered.copy()
-                player_value = self.get_attribute_and_compare(filtered, player_index, column, ascending=ascending)
+                player_value = self.get_profile_attribute_and_compare(filtered, player_index, column, attribute_name, ascending=ascending, relative=relative)
                 data["values"].append({
                     "type": attribute_name,
                     "value": float(player_value)
@@ -596,6 +646,26 @@ class Stats:
             return 100
         total = dataframe.shape[0]
         return float((total - rank) / total * 100)
+    
+    def get_profile_attribute_and_compare(
+        self,
+        dataframe: pd.DataFrame,
+        index: tuple,
+        column: tuple,
+        attribute: str,
+        ascending=False,
+        relative=False
+    ) -> float:
+        dataframe[column] = pd.to_numeric(dataframe[column])
+        column_name = column if relative else attribute + "_90"
+        dataframe["rank"] = dataframe[column_name].rank(
+            ascending=ascending, method="max", na_option="bottom"
+        )
+        rank = dataframe.loc[index, "rank"]
+        if rank == 1:
+            return 100
+        total = dataframe.shape[0]
+        return float((total - rank) / total * 100)
 
     def get_map_by_stat_type(self, stat_type):
         if stat_type == "shooting":
@@ -608,6 +678,8 @@ class Stats:
             return self.passing_attributes
         elif stat_type == "defending":
             return self.defending_attributes
+        elif stat_type == "superstitions":
+            return self.superstitious_attributes
         elif stat_type == "overall":
             return self.overall_goalkeeping_attributes
         elif stat_type == "shot-stopping":
@@ -632,6 +704,8 @@ class Stats:
             return "defending"
         elif dataframe is self.possession:
             return "possession"
+        elif dataframe is self.playing_time:
+            return "playing_time"
         elif dataframe is self.misc:
             return "misc"
         elif dataframe is self.keeper:

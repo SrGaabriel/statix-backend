@@ -1,7 +1,7 @@
 {
   "América-MG": ["América (MG)"],
   "Atlético-GO": ["Atl Goianiense"],
-  "Athletico Paranaense": ["Atl Paranaense"],
+  "Athletico Paranaense": ["Ath Paranaense"],
   "Atlético-MG": ["Atlético Mineiro"],
   "Botafogo": ["Botafogo (RJ)"],
   "RB Bragantino": ["Bragantino"],
@@ -22,5 +22,6 @@
   "Bayern Munich": ["Bayern"],
   "Borussia Dortmund": ["Dortmund"],
   "Borussia M'Gladbach": ["M'Gladbach"],
-  "Eintracht Frankfurt": ["Eint Frankfurt"]
+  "Eintracht Frankfurt": ["Eint Frankfurt"],
+  "Sheffield United": ["Sheffield Utd"]
 }

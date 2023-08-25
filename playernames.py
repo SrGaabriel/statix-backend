@@ -181,5 +181,4 @@ PLAYERNAME_REPLACEMENTS = {}
 for playername, replacement in RAW_PLAYERNAME_REPLACEMENTS.items():
     (season, club, replacements) = replacement
     for replacement in replacements:
-        print((replacement.lower(), season, club), playername)
         PLAYERNAME_REPLACEMENTS[(replacement.lower(), season, club)] = playername
